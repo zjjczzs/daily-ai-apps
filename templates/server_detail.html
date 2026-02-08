@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}{{ server.name }}{% endblock %}
+
+{% block content %}
+<!-- 头部 -->
+<div class="gradient-bg text-white py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <a href="/" class="text-purple-200 hover:text-white flex items-center mb-4">
+            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            返回列表
+        </a>
+        <div class="flex flex-col md:flex-row justify-between items-start">
+            <div>
+                <div class="flex items-center space-x-3 mb-2">
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold {{ get_category_color(server.category) }}">
+                        {{ server.category }}
+                    </span>
+                    {% if server.stars %}
+                    <span class="flex items-center text-yellow-300">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                        </svg>
+                        {{ "{:,}".format(server.stars) }}
+                    </span>
+                    {% endif %}
+                </div>
+                <h1 class="text-3xl font-bold">{{ server.name }}</h1>
+            </div>
+            {% if server.github_url %}
+            <a href="{{ server.github_url }}" target="_blank" class="mt-4 md:mt-0 bg-white text-purple-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clip-rule="evenodd"></path>
+                </svg>
+                GitHub
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- 左侧：信息 -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- 描述 -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-3">描述</h2>
+                <p class="text-gray-600">{{ server.description }}</p>
+            </div>
+
+            <!-- 工具列表 -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">
+                    可用工具 
+                    <span class="text-sm font-normal text-gray-500">({{ server.tools|length }})</span>
+                </h2>
+                {% if server.tools %}
+                <div class="space-y-4">
+                    {% for tool in server.tools %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-purple-300 transition">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-semibold text-gray-900">{{ tool.name }}</h3>
+                                <p class="text-sm text-gray-600 mt-1">{{ tool.description }}</p>
+                            </div>
+                            <button onclick="showTestModal('{{ tool.name }}')" 
+                                    class="text-purple-600 hover:text-purple-800 text-sm font-medium">
+                                测试
+                            </button>
+                        </div>
+                        {% if tool.parameters and tool.parameters.properties %}
+                        <div class="mt-3 text-xs">
+                            <span class="text-gray-500">参数:</span>
+                            <div class="flex flex-wrap gap-2 mt-1">
+                                {% for param_name, param_info in tool.parameters.properties.items() %}
+                                <span class="px-2 py-1 bg-gray-100 rounded text-gray-700">
+                                    {{ param_name }}{% if param_info.type %}: {{ param_info.type }}{% endif %}
+                                </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-center py-4">暂无工具信息</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 右侧：配置 -->
+        <div class="space-y-6">
+            <!-- 连接信息 -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">连接配置</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">传输方式</label>
+                        <div class="flex items-center px-3 py-2 bg-gray-50 rounded-lg">
+                            {% if server.transport == 'stdio' %}
+                            <svg class="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            {% else %}
+                            <svg class="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                            </svg>
+                            {% endif %}
+                            <span class="text-gray-900 font-medium">{{ server.transport.upper() }}</span>
+                        </div>
+                    </div>
+
+                    {% if server.command %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">命令</label>
+                        <div class="relative">
+                            <code class="block w-full px-3 py-2 bg-gray-900 text-green-400 rounded-lg text-sm overflow-x-auto">
+                                {{ server.command }}
+                            </code>
+                            <button onclick="copyToClipboard('{{ server.command }}')" 
+                                    class="absolute right-2 top-2 text-gray-400 hover:text-white">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if server.url %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
+                        <div class="relative">
+                            <code class="block w-full px-3 py-2 bg-gray-900 text-blue-400 rounded-lg text-sm">
+                                {{ server.url }}
+                            </code>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 标签 -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-3">标签</h2>
+                <div class="flex flex-wrap gap-2">
+                    {% for tag in server.tags %}
+                    <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 操作 -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-3">操作</h2>
+                <button onclick="deleteServer('{{ server.id }}')" 
+                        class="w-full px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition">
+                    删除服务器
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 测试模态框 -->
+<div id="test-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl max-w-lg w-full mx-4 p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">测试工具: <span id="test-tool-name"></span></h3>
+            <button onclick="closeTestModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div id="test-params" class="space-y-3 mb-4">
+            <!-- 动态生成参数输入 -->
+        </div>
+        <div id="test-result" class="hidden mt-4 p-4 bg-gray-100 rounded-lg">
+            <h4 class="font-semibold mb-2">结果:</h4>
+            <pre id="test-result-content" class="text-sm overflow-x-auto"></pre>
+        </div>
+        <div class="flex space-x-3 mt-4">
+            <button onclick="runTest()" class="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition">
+                运行测试
+            </button>
+            <button onclick="closeTestModal()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                关闭
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentTool = null;
+let currentToolParams = {};
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert('已复制到剪贴板');
+    });
+}
+
+function deleteServer(serverId) {
+    if (confirm('确定要删除这个服务器吗？')) {
+        fetch(`/api/servers/${serverId}`, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(() => {
+                window.location.href = '/';
+            });
+    }
+}
+
+function showTestModal(toolName) {
+    currentTool = toolName;
+    document.getElementById('test-tool-name').textContent = toolName;
+    
+    // 获取工具参数信息
+    const tools = {{ server.tools|tojson }};
+    const tool = tools.find(t => t.name === toolName);
+    
+    const paramsDiv = document.getElementById('test-params');
+    paramsDiv.innerHTML = '';
+    currentToolParams = {};
+    
+    if (tool && tool.parameters && tool.parameters.properties) {
+        Object.entries(tool.parameters.properties).forEach(([name, info]) => {
+            currentToolParams[name] = '';
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <label class="block text-sm font-medium text-gray-700 mb-1">${name}</label>
+                <input type="text" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                       placeholder="${info.description || ''}"
+                       onchange="currentToolParams['${name}'] = this.value">
+            `;
+            paramsDiv.appendChild(div);
+        });
+    } else {
+        paramsDiv.innerHTML = '<p class="text-gray-500">此工具无需参数</p>';
+    }
+    
+    document.getElementById('test-modal').classList.remove('hidden');
+    document.getElementById('test-modal').classList.add('flex');
+    document.getElementById('test-result').classList.add('hidden');
+}
+
+function closeTestModal() {
+    document.getElementById('test-modal').classList.add('hidden');
+    document.getElementById('test-modal').classList.remove('flex');
+}
+
+function runTest() {
+    fetch(`/api/test/{{ server.id }}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({tool: currentTool, params: currentToolParams})
+    })
+    .then(r => r.json())
+    .then(data => {
+        document.getElementById('test-result').classList.remove('hidden');
+        document.getElementById('test-result-content').textContent = JSON.stringify(data, null, 2);
+    });
+}
+</script>
+{% endblock %}
