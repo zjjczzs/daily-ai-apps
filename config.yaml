@@ -1,0 +1,39 @@
+# MCP Client CLI 默认配置
+# 复制此文件为 config.yaml 并修改为你的配置
+
+servers:
+  # 文件系统服务器 - 提供文件读写功能
+  # filesystem:
+  #   command: npx
+  #   args:
+  #     - "-y"
+  #     - "@modelcontextprotocol/server-filesystem"
+  #     - "/path/to/your/files"
+  
+  # Web获取服务器 - 提供HTTP请求功能
+  fetch:
+    command: uvx
+    args:
+      - "mcp-server-fetch"
+  
+  # SQLite数据库服务器
+  # sqlite:
+  #   command: uvx
+  #   args:
+  #     - "mcp-server-sqlite"
+  #     - "--db-path"
+  #     - "./data.db"
+  
+  # Git服务器
+  # git:
+  #   command: uvx
+  #   args:
+  #     - "mcp-server-git"
+  #     - "--repository"
+  #     - "/path/to/repo"
+
+# 客户端设置
+settings:
+  timeout: 30
+  max_tools: 100
+  log_level: INFO
