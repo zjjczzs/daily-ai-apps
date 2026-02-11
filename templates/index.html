@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM智能路由成本优化器</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 LLM智能路由成本优化器</h1>
+            <p class="subtitle">智能选择最优模型，节省高达 <span class="highlight">78%</span> 的推理成本</p>
+        </header>
+
+        <main>
+            <!-- 路由配置 -->
+            <section class="config-section">
+                <h2>⚙️ 路由配置</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="prompt">输入你的Prompt:</label>
+                        <textarea id="prompt" rows="4" placeholder="例如：写一个Python函数来计算斐波那契数列..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="budget">预算上限 (USD):</label>
+                            <input type="number" id="budget" placeholder="0.01" step="0.001" min="0">
+                            <small>留空表示无限制</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="priority">优先级:</label>
+                            <select id="priority">
+                                <option value="balanced" selected>⚖️ 平衡 (质量+成本)</option>
+                                <option value="speed">⚡ 速度优先</option>
+                                <option value="quality">✨ 质量优先</option>
+                                <option value="cost">💰 成本优先</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="route-btn" class="btn-primary">🚀 智能路由</button>
+                </div>
+            </section>
+
+            <!-- 加载状态 -->
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>正在分析并选择最优模型...</p>
+            </div>
+
+            <!-- 结果展示 -->
+            <section id="result-section" class="result-section hidden">
+                <h2>📊 路由结果</h2>
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="model-info">
+                            <h3 id="result-model-name">-</h3>
+                            <span id="result-provider" class="provider-badge">-</span>
+                        </div>
+                        <div class="savings-badge">
+                            <span id="result-savings">-</span>% 节省
+                        </div>
+                    </div>
+                    
+                    <div class="result-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">💰 预估成本</span>
+                            <span id="result-cost" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">📊 质量评分</span>
+                            <span id="result-quality" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">⚡ 响应时间</span>
+                            <span id="result-speed" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">📝 复杂度</span>
+                            <span id="result-complexity" class="stat-value">-</span>
+                        </div>
+                    </div>
+
+                    <div class="token-info">
+                        <p>输入Tokens: <span id="result-input-tokens">-</span> | 
+                           输出Tokens: <span id="result-output-tokens">-</span> | 
+                           上下文窗口: <span id="result-context">-</span></p>
+                    </div>
+                </div>
+
+                <!-- 备选方案 -->
+                <div id="alternatives-section" class="alternatives-section">
+                    <h3>🔄 备选方案</h3>
+                    <div id="alternatives-list" class="alternatives-list"></div>
+                </div>
+            </section>
+
+            <!-- 模型对比 -->
+            <section class="comparison-section">
+                <h2>📈 模型成本对比</h2>
+                <button id="compare-btn" class="btn-secondary">对比所有模型</button>
+                <div id="comparison-table" class="comparison-table hidden">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>模型</th>
+                                <th>提供商</th>
+                                <th>预估成本</th>
+                                <th>质量评分</th>
+                                <th>响应时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparison-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 支持的模型 -->
+            <section class="models-section">
+                <h2>🔌 支持的模型</h2>
+                <div class="models-grid">
+                    {% for model_id, model in models.items() %}
+                    <div class="model-card">
+                        <div class="model-header">
+                            <h4>{{ model.name }}</h4>
+                            <span class="provider-tag">{{ model.provider }}</span>
+                        </div>
+                        <div class="model-details">
+                            <p>💰 输入: ${{ "%.2f"|format(model.input_cost_per_1m) }}/1M tokens</p>
+                            <p>💰 输出: ${{ "%.2f"|format(model.output_cost_per_1m) }}/1M tokens</p>
+                            <p>⚡ 响应: {{ model.avg_speed_ms }}ms</p>
+                            <p>✨ 质量: {{ model.quality_score }}/10</p>
+                            <p>📄 上下文: {{ "{:,}".format(model.context_window) }} tokens</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>🔥 灵感来源: <a href="https://github.com/BlockRunAI/ClawRouter" target="_blank">ClawRouter</a> | 
+               开源项目: <a href="https://github.com/zjjczzs/daily-ai-apps" target="_blank">daily-ai-apps</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // 智能路由
+        document.getElementById('route-btn').addEventListener('click', async () => {
+            const prompt = document.getElementById('prompt').value.trim();
+            const budget = document.getElementById('budget').value;
+            const priority = document.getElementById('priority').value;
+
+            if (!prompt) {
+                alert('请输入Prompt!');
+                return;
+            }
+
+            // 显示加载
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('result-section').classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/route', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, budget, priority })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert('错误: ' + data.error);
+                    return;
+                }
+
+                // 显示结果
+                document.getElementById('result-model-name').textContent = data.name;
+                document.getElementById('result-provider').textContent = data.provider;
+                document.getElementById('result-savings').textContent = data.savings_percent;
+                document.getElementById('result-cost').textContent = '$' + data.cost.toFixed(6);
+                document.getElementById('result-quality').textContent = data.quality_score + '/10';
+                document.getElementById('result-speed').textContent = data.speed_ms + 'ms';
+                document.getElementById('result-complexity').textContent = 
+                    data.complexity === 'high' ? '高' : 
+                    data.complexity === 'low' ? '低' : '中';
+                document.getElementById('result-input-tokens').textContent = data.input_tokens;
+                document.getElementById('result-output-tokens').textContent = data.output_tokens;
+                document.getElementById('result-context').textContent = data.context_window.toLocaleString();
+
+                // 显示备选方案
+                const altList = document.getElementById('alternatives-list');
+                altList.innerHTML = '';
+                if (data.alternatives && data.alternatives.length > 0) {
+                    data.alternatives.forEach(alt => {
+                        const altCard = document.createElement('div');
+                        altCard.className = 'alternative-card';
+                        altCard.innerHTML = `
+                            <div class="alt-info">
+                                <strong>${alt.name}</strong>
+                                <span class="provider-badge">${alt.provider}</span>
+                            </div>
+                            <div class="alt-stats">
+                                <span>💰 $${alt.cost.toFixed(6)}</span>
+                                <span>✨ ${alt.quality_score}/10</span>
+                                <span>⚡ ${alt.speed_ms}ms</span>
+                            </div>
+                        `;
+                        altList.appendChild(altCard);
+                    });
+                    document.getElementById('alternatives-section').classList.remove('hidden');
+                }
+
+                document.getElementById('result-section').classList.remove('hidden');
+
+            } catch (error) {
+                alert('请求失败: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+            }
+        });
+
+        // 模型对比
+        document.getElementById('compare-btn').addEventListener('click', async () => {
+            const prompt = document.getElementById('prompt').value.trim();
+            
+            if (!prompt) {
+                alert('请先输入Prompt!');
+                return;
+            }
+
+            const btn = document.getElementById('compare-btn');
+            btn.textContent = '加载中...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/compare', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+
+                const data = await response.json();
+                const tbody = document.getElementById('comparison-tbody');
+                tbody.innerHTML = '';
+
+                data.comparisons.forEach((comp, index) => {
+                    const row = document.createElement('tr');
+                    if (index === 0) row.className = 'best-option';
+                    row.innerHTML = `
+                        <td><strong>${comp.name}</strong></td>
+                        <td>${comp.provider}</td>
+                        <td class="cost-cell">$${comp.cost.toFixed(6)}</td>
+                        <td>${comp.quality_score}/10</td>
+                        <td>${comp.speed_ms}ms</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                document.getElementById('comparison-table').classList.remove('hidden');
+
+            } catch (error) {
+                alert('对比失败: ' + error.message);
+            } finally {
+                btn.textContent = '对比所有模型';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
